@@ -6,6 +6,8 @@ class FSM {
     constructor(config) {
         if (config !== null) {
             this.initial = config.initial;
+            this.previous = null;
+            this.next = null;
             this.current = this.initial;
             this.states = config.states;;
         } else {
@@ -27,7 +29,9 @@ class FSM {
      */
     changeState(state) {
         if (Object.keys(this.states).some((str) => str.includes(state))) {
+            this.previous = this.current;
             this.current = state;
+            this.next = null;
         } else {
             throw new Error;
         }
@@ -39,7 +43,9 @@ class FSM {
      */
     trigger(event) {
         if (Object.keys(this.states[this.current]["transitions"]).some((str) => str.includes(event))) {
+            this.previous = this.current;
             this.current = this.states[this.current]["transitions"][event];
+            this.next = null;
         }
         else {
             throw new Error;
@@ -51,6 +57,8 @@ class FSM {
      */
     reset() {
         this.current = this.initial;
+        this.previous = null;
+        this.next = null;
     }
 
     /**
@@ -82,19 +90,42 @@ class FSM {
      * Returns false if undo is not available.
      * @returns {Boolean}
      */
-    undo() { }
+    undo() {
+        if (this.previous !== null) {
+            this.next = this.current;
+            this.current = this.previous;
+            this.previous = null;
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
 
     /**
      * Goes redo to state.
      * Returns false if redo is not available.
      * @returns {Boolean}
      */
-    redo() { }
+    redo() {
+        if (this.next !== null) {
+            this.previous = this.current;
+            this.current = this.next;
+            this.next = null;
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
 
     /**
      * Clears transition history
      */
-    clearHistory() { }
+    clearHistory() {
+        this.previous = null;
+        this.next = null;
+    }
 }
 
 module.exports = FSM;
